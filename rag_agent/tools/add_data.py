@@ -15,6 +15,74 @@ from ..config import (
 )
 from .utils import check_corpus_exists, get_corpus_resource_name
 
+from ..config import (
+    LOCATION,
+    PROJECT_ID,
+)
+MODEL_ID = "gemini-2.0-flash"
+MODEL_NAME = "projects/{PROJECT_ID}/locations/{LOCATION}/publishers/google/models/{MODEL_ID}"
+MAX_PARSING_REQUESTS_PER_MIN = 1000
+CUSTOM_PARSING_PROMPT = """
+You are an expert document processing assistant specializing in extracting and converting PDF content into clean, structured text suitable for Retrieval-Augmented Generation (RAG) systems.
+Your Task
+Extract ALL textual content from the provided PDF document and convert it into clean, well-structured plain text that preserves the semantic meaning and logical flow of information.
+Processing Instructions 
+1. Content Extraction
+
+Extract all visible text including body text, headers, footers, captions, footnotes, and annotations
+Process scanned documents by performing OCR on any image-based text
+Handle tables by converting them into structured text format using clear delimiters
+Extract text from images including charts, diagrams, and infographics where text is present
+Describe visual content by providing detailed descriptions of images, charts, graphs, diagrams, and illustrations that contain no text but convey important information
+Preserve mathematical formulas and convert them to readable text format when possible
+Include metadata such as document title, author, and creation date if visible
+
+2. Text Cleaning and Formatting
+
+Remove unnecessary formatting artifacts (page numbers, headers/footers if repetitive)
+Fix OCR errors and typos where contextually obvious
+Normalize spacing and line breaks
+Convert special characters to standard text equivalents
+Preserve intentional formatting like bullet points and numbered lists
+Maintain paragraph structure and logical text flow
+
+3. Structure Preservation
+
+Headers and Sections: Clearly mark document sections with appropriate hierarchy
+Lists: Convert to clean bulleted or numbered format
+Tables: Present in readable text format with clear column/row separation
+References: Preserve citation information and bibliography
+Captions: Include image/table captions with context
+Visual Elements: Provide descriptive text for images, charts, graphs, diagrams, and illustrations using format: [IMAGE: detailed description of visual content, including key information, data trends, or concepts depicted]
+
+4. Quality Assurance
+
+Ensure no content is lost or omitted
+Verify text coherence and readability
+Check that technical terms and proper nouns are correctly extracted
+Maintain the original document's informational integrity
+
+Output Format
+Provide the extracted content as clean, structured plain text with:
+
+Clear section breaks
+Preserved logical flow
+Consistent formatting
+No extraneous markup or artifacts
+
+Special Handling
+
+Multi-column layouts: Read in logical order (left-to-right, top-to-bottom)
+Forms: Extract field names and any filled-in content
+Handwritten text: Attempt to transcribe if legible
+Multiple languages: Preserve original language content
+Technical documents: Maintain precision of technical terminology
+Visual Content: For images without text, provide comprehensive descriptions that capture the essential information, data relationships, or concepts they represent
+
+Error Handling
+If any content is unclear, illegible, or potentially misinterpreted, note this with [UNCLEAR: description] tags rather than guessing.
+"""
+
 
 def add_data(
     corpus_name: str,
@@ -119,12 +187,19 @@ def add_data(
                 chunk_overlap=DEFAULT_CHUNK_OVERLAP,
             ),
         )
+        
+        llm_parser_config = rag.LlmParserConfig(
+            model_name = MODEL_NAME,
+            max_parsing_requests_per_min=MAX_PARSING_REQUESTS_PER_MIN, # Optional
+            custom_parsing_prompt=CUSTOM_PARSING_PROMPT, # Optional
+        )
 
         # Import files to the corpus
         import_result = rag.import_files(
             corpus_resource_name,
             validated_paths,
             transformation_config=transformation_config,
+            llm_parser=llm_parser_config,
             max_embedding_requests_per_min=DEFAULT_EMBEDDING_REQUESTS_PER_MIN,
         )
 

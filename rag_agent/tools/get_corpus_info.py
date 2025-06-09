@@ -88,7 +88,7 @@ def get_corpus_info(
             "corpus_name": corpus_name,
             "corpus_display_name": corpus_display_name,
             "file_count": len(file_details),
-            "files": file_details,
+            # "files": file_details,
         }
 
     except Exception as e:
