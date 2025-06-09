@@ -27,3 +27,6 @@ __all__ = [
     "get_corpus_resource_name",
     "set_current_corpus",
 ]
+
+print(get_corpus_resource_name("test"))
+

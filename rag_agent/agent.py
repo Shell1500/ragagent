@@ -9,7 +9,7 @@ from .tools.list_corpora import list_corpora
 from .tools.rag_query import rag_query
 
 root_agent = Agent(
-    name="RagAgent",
+    name="HMKAgent",
     # Using Gemini 2.5 Flash for best performance with RAG operations
     model="gemini-2.5-flash-preview-04-17",
     description="Vertex AI RAG Agent",
@@ -63,7 +63,7 @@ root_agent = Agent(
     
     ## Using Tools
     
-    You have seven specialized tools at your disposal:
+    You have three specialized tools at your disposal:
     
     1. `rag_query`: Query a corpus to answer questions
        - Parameters:
