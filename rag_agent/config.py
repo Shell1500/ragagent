@@ -24,3 +24,7 @@ DEFAULT_TOP_K = 3
 DEFAULT_DISTANCE_THRESHOLD = 0.5
 DEFAULT_EMBEDDING_MODEL = "publishers/google/models/text-embedding-005"
 DEFAULT_EMBEDDING_REQUESTS_PER_MIN = 1000
+
+# Default corpus settings
+DEFAULT_CORPUS_ID = "4532873024948404224"  # Your specific corpus ID
+DEFAULT_CORPUS_DISPLAY_NAME = "test"  # The display name you use

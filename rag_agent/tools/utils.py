@@ -11,6 +11,8 @@ from vertexai import rag
 from ..config import (
     LOCATION,
     PROJECT_ID,
+    DEFAULT_CORPUS_ID,
+    DEFAULT_CORPUS_DISPLAY_NAME,
 )
 
 logger = logging.getLogger(__name__)
@@ -33,6 +35,10 @@ def get_corpus_resource_name(corpus_name: str) -> str:
     if re.match(r"^projects/[^/]+/locations/[^/]+/ragCorpora/[^/]+$", corpus_name):
         return corpus_name
 
+    # Check if this matches the default corpus display name
+    if corpus_name == DEFAULT_CORPUS_DISPLAY_NAME:
+        return f"projects/{PROJECT_ID}/locations/{LOCATION}/ragCorpora/{DEFAULT_CORPUS_ID}"
+
     # Check if this is a display name of an existing corpus
     try:
         # List all corpora and check if there's a match with the display name
@@ -42,8 +48,10 @@ def get_corpus_resource_name(corpus_name: str) -> str:
                 return corpus.name
     except Exception as e:
         logger.warning(f"Error when checking for corpus display name: {str(e)}")
-        # If we can't check, continue with the default behavior
-        pass
+        # If we can't check and it's a simple name, try the default corpus
+        if corpus_name.lower() in ["test", "default"] or not re.search(r"[^a-zA-Z0-9_-]", corpus_name):
+            logger.info(f"Defaulting to configured corpus for: {corpus_name}")
+            return f"projects/{PROJECT_ID}/locations/{LOCATION}/ragCorpora/{DEFAULT_CORPUS_ID}"
 
     # If it contains partial path elements, extract just the corpus ID
     if "/" in corpus_name:
@@ -115,3 +123,34 @@ def set_current_corpus(corpus_name: str, tool_context: ToolContext) -> bool:
         tool_context.state["current_corpus"] = corpus_name
         return True
     return False
+
+
+if __name__ == "__main__":
+    # When running as a script, handle imports differently
+    import sys
+    import os
+    
+    # Add the parent directory to the path so we can import from rag_agent
+    sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+    
+    # Import config directly
+    from rag_agent.config import PROJECT_ID, LOCATION, DEFAULT_CORPUS_ID, DEFAULT_CORPUS_DISPLAY_NAME
+    
+    # Test the function
+    test_corpus_name = "test"
+    result = get_corpus_resource_name(test_corpus_name)
+    print(f"Input: '{test_corpus_name}'")
+    print(f"Output: '{result}'")
+    
+    # Test with different inputs
+    test_cases = [
+        "test",
+        "my-corpus",
+        "projects/my-project/locations/us-central1/ragCorpora/existing-corpus",
+        "partial/path/corpus-name"
+    ]
+    
+    print("\nTesting multiple cases:")
+    for test_case in test_cases:
+        result = get_corpus_resource_name(test_case)
+        print(f"'{test_case}' -> '{result}'")
