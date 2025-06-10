@@ -13,11 +13,10 @@ from ..config import (
     DEFAULT_CHUNK_SIZE,
     DEFAULT_EMBEDDING_REQUESTS_PER_MIN,
 )
-from .utils import check_corpus_exists, get_corpus_resource_name
+from .utils import get_corpus_resource_name
 
 
 def add_data(
-    corpus_name: str,
     paths: List[str],
     tool_context: ToolContext,
 ) -> dict:
@@ -25,7 +24,6 @@ def add_data(
     Add new data sources to a Vertex AI RAG corpus.
 
     Args:
-        corpus_name (str): The name of the corpus to add data to. If empty, the current corpus will be used.
         paths (List[str]): List of URLs or GCS paths to add to the corpus.
                           Supported formats:
                           - Google Drive: "https://drive.google.com/file/d/{FILE_ID}/view"
@@ -37,21 +35,12 @@ def add_data(
     Returns:
         dict: Information about the added data and status
     """
-    # Check if the corpus exists
-    if not check_corpus_exists(corpus_name, tool_context):
-        return {
-            "status": "error",
-            "message": f"Corpus '{corpus_name}' does not exist. Please create it first using the create_corpus tool.",
-            "corpus_name": corpus_name,
-            "paths": paths,
-        }
-
     # Validate inputs
     if not paths or not all(isinstance(path, str) for path in paths):
         return {
             "status": "error",
             "message": "Invalid paths: Please provide a list of URLs or GCS paths",
-            "corpus_name": corpus_name,
+            "corpus_name": "hardcoded-corpus",
             "paths": paths,
         }
 
@@ -104,13 +93,13 @@ def add_data(
         return {
             "status": "error",
             "message": "No valid paths provided. Please provide Google Drive URLs or GCS paths.",
-            "corpus_name": corpus_name,
+            "corpus_name": "hardcoded-corpus",
             "invalid_paths": invalid_paths,
         }
 
     try:
         # Get the corpus resource name
-        corpus_resource_name = get_corpus_resource_name(corpus_name)
+        corpus_resource_name = get_corpus_resource_name()
 
         # Set up chunking configuration
         transformation_config = rag.TransformationConfig(
@@ -130,7 +119,7 @@ def add_data(
 
         # Set this as the current corpus if not already set
         if not tool_context.state.get("current_corpus"):
-            tool_context.state["current_corpus"] = corpus_name
+            tool_context.state["current_corpus"] = "hardcoded-corpus"
 
         # Build the success message
         conversion_msg = ""
@@ -139,8 +128,8 @@ def add_data(
 
         return {
             "status": "success",
-            "message": f"Successfully added {import_result.imported_rag_files_count} file(s) to corpus '{corpus_name}'{conversion_msg}",
-            "corpus_name": corpus_name,
+            "message": f"Successfully added {import_result.imported_rag_files_count} file(s) to corpus 'hardcoded-corpus'{conversion_msg}",
+            "corpus_name": "hardcoded-corpus",
             "files_added": import_result.imported_rag_files_count,
             "paths": validated_paths,
             "invalid_paths": invalid_paths,
@@ -151,6 +140,6 @@ def add_data(
         return {
             "status": "error",
             "message": f"Error adding data to corpus: {str(e)}",
-            "corpus_name": corpus_name,
+            "corpus_name": "hardcoded-corpus",
             "paths": paths,
         }

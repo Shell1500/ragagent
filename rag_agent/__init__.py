@@ -8,6 +8,7 @@ import os
 
 import vertexai
 from dotenv import load_dotenv
+from . import agent
 
 # Load environment variables
 load_dotenv()

@@ -11,11 +11,10 @@ from ..config import (
     DEFAULT_DISTANCE_THRESHOLD,
     DEFAULT_TOP_K,
 )
-from .utils import check_corpus_exists, get_corpus_resource_name
+from .utils import get_corpus_resource_name
 
 
 def rag_query(
-    corpus_name: str,
     query: str,
     tool_context: ToolContext,
 ) -> dict:
@@ -23,8 +22,6 @@ def rag_query(
     Query a Vertex AI RAG corpus with a user question and return relevant information.
 
     Args:
-        corpus_name (str): The name of the corpus to query. If empty, the current corpus will be used.
-                          Preferably use the resource_name from list_corpora results.
         query (str): The text query to search for in the corpus
         tool_context (ToolContext): The tool context
 
@@ -32,18 +29,8 @@ def rag_query(
         dict: The query results and status
     """
     try:
-
-        # Check if the corpus exists
-        if not check_corpus_exists(corpus_name, tool_context):
-            return {
-                "status": "error",
-                "message": f"Corpus '{corpus_name}' does not exist. Please create it first using the create_corpus tool.",
-                "query": query,
-                "corpus_name": corpus_name,
-            }
-
         # Get the corpus resource name
-        corpus_resource_name = get_corpus_resource_name(corpus_name)
+        corpus_resource_name = get_corpus_resource_name()
 
         # Configure retrieval parameters
         rag_retrieval_config = rag.RagRetrievalConfig(
@@ -85,18 +72,18 @@ def rag_query(
         if not results:
             return {
                 "status": "warning",
-                "message": f"No results found in corpus '{corpus_name}' for query: '{query}'",
+                "message": f"No results found in corpus 'hardcoded-corpus' for query: '{query}'",
                 "query": query,
-                "corpus_name": corpus_name,
+                "corpus_name": "hardcoded-corpus",
                 "results": [],
                 "results_count": 0,
             }
 
         return {
             "status": "success",
-            "message": f"Successfully queried corpus '{corpus_name}'",
+            "message": f"Successfully queried corpus 'hardcoded-corpus'",
             "query": query,
-            "corpus_name": corpus_name,
+            "corpus_name": "hardcoded-corpus",
             "results": results,
             "results_count": len(results),
         }
@@ -108,5 +95,5 @@ def rag_query(
             "status": "error",
             "message": error_msg,
             "query": query,
-            "corpus_name": corpus_name,
+            "corpus_name": "hardcoded-corpus",
         }
