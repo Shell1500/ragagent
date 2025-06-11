@@ -5,6 +5,8 @@ import ast
 from dotenv import load_dotenv
 import vertexai
 from vertexai import agent_engines
+from google.oauth2 import service_account
+
 
 # Load environment variables
 load_dotenv()
@@ -18,8 +20,22 @@ AGENT_RESOURCE_NAME = "projects/442235900540/locations/us-central1/reasoningEngi
 @st.cache_resource
 def initialize_vertex_ai():
     """Initialize Vertex AI."""
-    vertexai.init(project=PROJECT_ID, location=LOCATION, staging_bucket=STAGING_BUCKET)
-    return agent_engines.get(AGENT_RESOURCE_NAME)
+    
+    if "gcp_service_account" in st.secrets:
+        creds = service_account.Credentials.from_service_account_info(
+            st.secrets["gcp_service_account"]
+        )
+    else:
+        creds = None   # falls back to local ADC if you’re on your laptop
+
+    # 2️⃣ init Vertex AI
+    vertexai.init(
+        project        = PROJECT_ID,
+        location       = LOCATION,
+        staging_bucket = STAGING_BUCKET,
+        credentials    = creds,
+    )
+    return agent_engines.get(AGENT_RESOURCE_NAME, credentials=creds)
 
 def create_chat_session(_remote_app):
     """Create a new chat session."""
