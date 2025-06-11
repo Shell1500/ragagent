@@ -35,7 +35,7 @@ def initialize_vertex_ai():
         staging_bucket = STAGING_BUCKET,
         credentials    = creds,
     )
-    return agent_engines.get(AGENT_RESOURCE_NAME, credentials=creds)
+    return agent_engines.get(AGENT_RESOURCE_NAME)
 
 def create_chat_session(_remote_app):
     """Create a new chat session."""
